@@ -90,11 +90,11 @@ TEMPLATE_PROPERTIES = {
 DEFAULT_QUERIES = {
     # those are settings for modified stuff, use them as example
     'ch_jet_su30': [
-        ['ch_jet_su30_EngineL', 'maxspeed', '0.0 0.0 2000.0'],
-        ['ch_jet_su30_EngineL', 'acc', '0.0 0.0 300.0'],
+        ['ch_jet_su30_v2_EngineL', 'maxspeed', '0.0 0.0 2000.0'],
+        ['ch_jet_su30_v2_EngineL', 'acc', '0.0 0.0 300.0'],
 
-        ['ch_jet_su30_EngineR', 'maxspeed', '0.0 0.0 2000.0'],
-        ['ch_jet_su30_EngineR', 'acc', '0.0 0.0 300.0'],
+        ['ch_jet_su30_v2_EngineR', 'maxspeed', '0.0 0.0 2000.0'],
+        ['ch_jet_su30_v2_EngineR', 'acc', '0.0 0.0 300.0'],
     ],
     'mec_jet_mig29': [
         ['mec_jet_mig29_Engine_Left', 'maxspeed', '0.0 0.0 2000.0'],

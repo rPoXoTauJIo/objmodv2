@@ -91,10 +91,7 @@ class Query:
 class QueryManager:
 
     def __init__(self):
-        global G_QUERY_MANAGER
-
         self.queries = {}
-        G_QUERY_MANAGER = self
     
     def addQuery(self, message):
         queryObject = Query(message)
@@ -153,7 +150,7 @@ def onGameStatusChanged(status):
         host.registerHandler('ExitVehicle', onExitVehicle)
 
         # creating query manager
-        QueryManager()
+        G_QUERY_MANAGER = QueryManager()
         G_QUERY_MANAGER.setupDefaultQueries()
 
         setupDefaults()
