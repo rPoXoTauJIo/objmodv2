@@ -81,6 +81,11 @@ class Query:
                 """ % (self.template, attribute, args))
             #D.debug('InvokeCommand:: host.rcon_invoke()')
             D.debug('ObjectTemplate.active %s\nObjectTemplate.%s %s' % (self.template, command, args))
+    
+    def queryUpdate(self, queryObject):
+        for setting in queryObject.settings:
+            self.settings[setting] = queryObject.settings[setting]
+            
 
 class QueryManager:
     
@@ -89,10 +94,13 @@ class QueryManager:
 
         self.queries = {}
         G_QUERY_MANAGER = self
-        
-
-
-
+    
+    def addQuery(self, queryObject):
+        queryTemplate = queryObject.template
+        if queryTemplate not in self.queries:
+            self.queries[queryTemplate] = queryObject
+        else:
+            self.queries[queryTemplate].queryUpdate(queryObject)
 
 # ------------------------------------------------------------------------
 # Init
@@ -111,7 +119,6 @@ def deinit():
 # onGameStatusChanged
 # ------------------------------------------------------------------------
 def onGameStatusChanged(status):
-    global G_isReady
 
     if status == bf2.GameStatus.Playing:
         host.registerHandler('ChatMessage', onChatMessage, 1) #registering chatMessage handler
@@ -125,7 +132,6 @@ def onGameStatusChanged(status):
         host.registerHandler('ExitVehicle', onExitVehicle)
         
         setupDefaults()
-        G_isReady = True
         #resetUpdateTimer()
         D.debug('===== FINISHED OBJMOD INIT =====')
 
@@ -141,40 +147,40 @@ def resetUpdateTimer():
         G_UPDATE_TIMER = bf2.Timer(onUpdate, 1, 1)
         G_UPDATE_TIMER.setRecurring(0.01)# 30+-5fps = ~0.33...ms is server frame, no need to speed up things a lot
 
-#This is called in the very frequently
-# tnx pie&mats for idea, althorugh my implementation is stupid
+# offloading debug
+# tnx pie&mats for idea, althorugh my implementation is worse
 def onUpdate(data = ''):
-    global lastRecordedTime
+    global G_UPDATE_LAST
 
     #D.debugUDP('U_TIME: %s' % (D.time_now()))
-    delta = host.timer_getWallTime() - lastRecordedTime
-    lastRecordedTime = host.timer_getWallTime()
-    if G_TRACKEDVEHICLE != None:
-        position = G_TRACKEDVEHICLE.getPosition()
-        rotation = G_TRACKEDVEHICLE.getRotation()
+    delta = host.timer_getWallTime() - G_UPDATE_LAST
+    G_UPDATE_LAST = host.timer_getWallTime()
+    if G_TRACKED_OBJECT != None:
+        position = G_TRACKED_OBJECT.getPosition()
+        rotation = G_TRACKED_OBJECT.getRotation()
         D.debug('POSROT: P%sP|R%sR|T(%s)T|D(%s)D' % (position, rotation, host.timer_getWallTime(), delta), ['udp', 'echo'])
         #D.debug('Delta: %s' % (delta), ['echo'])
 
 def onEnterVehicle(player, vehicle, freeSoldier = False):
-    global G_TRACKEDVEHICLE
+    global G_TRACKED_OBJECT
 
-    G_TRACKEDVEHICLE = vehicle
-    D.debug('Player entered %s' % (G_TRACKEDVEHICLE.templateName))
+    G_TRACKED_OBJECT = vehicle
+    D.debug('Player entered %s' % (G_TRACKED_OBJECT.templateName))
     resetUpdateTimer()
 
 def onExitVehicle(player, vehicle):
-    global G_TRACKEDVEHICLE
+    global G_TRACKED_OBJECT
 
-    G_TRACKEDVEHICLE = None
+    G_TRACKED_OBJECT = None
     D.debug('Player left %s' % (vehicle.templateName))
     resetUpdateTimer()
 
 def setTestVehicle(template, data = ''):
-    global G_TRACKEDVEHICLE
+    global G_TRACKED_OBJECT
 
     objects = bf2.objectManager.getObjectsOfTemplate(template)
-    G_TRACKEDVEHICLE = objects[0]
-    D.debug('Selected object of template %s at %s' % (G_TRACKEDVEHICLE.templateName, str(G_TRACKEDVEHICLE.getPosition())))
+    G_TRACKED_OBJECT = objects[0]
+    D.debug('Selected object of template %s at %s' % (G_TRACKED_OBJECT.templateName, str(G_TRACKED_OBJECT.getPosition())))
 
 def setupDefaults():
     clearQueries()
