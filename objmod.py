@@ -95,30 +95,28 @@ class QueryManager:
 
         self.queries = {}
         G_QUERY_MANAGER = self
+    
+    def addQuery(self, message):
+        queryObject = Query(message)
+        self.updateQuery(queryObject)
 
-    def addQuery(self, queryObject):
+    def updateQuery(self, queryObject):
         queryTemplate = queryObject.template
         if queryTemplate not in self.queries:
             self.queries[queryTemplate] = queryObject
         else:
             self.queries[queryTemplate].queryUpdate(queryObject)
+    
+    def clearQueries(self):
+        for query in self.queries:
+            del self.queries[query]
 
     def setupDefaultQueries():
-        clearQueries()
+        self.clearQueries()
 
-        for objectKey in C.defaultQueries.keys():
-            for query in C.defaultQueries[objectKey]:
-                text = '!obj %s' % (query[0])
-                args = text.split(' ')
-                del args[0]
-                commandHandler(None, args)
-
-                text = '!obj %s %s' % (query[1], query[2])
-                args = text.split(' ')
-                del args[0]
-                commandHandler(None, args)
-
-                commandHandler(None, ['run'])
+        for vehicle in C.DEFAULT_QUERIES:
+            for queryParams in C.DEFAULT_QUERIES[vehicle]:
+                self.addQuery(' '.join(queryParams))
 
 # ------------------------------------------------------------------------
 # Init
