@@ -7,23 +7,31 @@
 #   Provides various debug for wofspawner
 #
 # ------------------------------------------------------------------------
-global g_startTime # global time, being set at start of round
+global G_TIME_START # global time, being set at start of round
 
 import bf2
 import host
 import time
 import os
+import socket
 
 import constants as C
 
-g_startTime = 0
-socket = None
+G_TIME_START = 0
+SOCK = None
 
 # ------------------------------------------------------------------------
 # Init
 # ------------------------------------------------------------------------
 def init():
-    global socket
+    global SOCK
+    
+    # create dgram udp socket
+    try:
+        SOCK = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        debugEcho('Created socket')
+    except socket.error:
+        debugEcho('Failed to create socket')
 
     setStartTime()
 
@@ -32,11 +40,11 @@ def init():
 # setting round start time
 # ------------------------------------------------------------------------
 def setStartTime():
-    global g_startTime
+    global G_TIME_START
 
     try:
-        g_startTime = host.timer_getWallTime()
-        debug('setStartTime(): successfully set start time at ' + str(g_startTime), 'time')
+        G_TIME_START = host.timer_getWallTime()
+        debug('setStartTime(): successfully set start time at ' + str(G_TIME_START), 'time')
     except:
         debug('setStartTime(): failed to reset start time', 'time' )
 
@@ -68,7 +76,7 @@ def echoMessage(msg):
 # returning time spent from start
 # ------------------------------------------------------------------------  
 def time_now():
-    timenow = round((host.timer_getWallTime() - g_startTime), 5)
+    timenow = round((host.timer_getWallTime() - G_TIME_START), 5)
     return timenow
 
 
@@ -86,34 +94,19 @@ def time_string_now(length = 8):
 # debug
 # simple func to create debug output
 # ------------------------------------------------------------------------  
-def debug(msg, types = None):
-
-    debugTypes = {
-        'file': debugFile,
-        'echo': debugEcho,
-        'ingame': debugIngame
+def debugMessage(msg, types = None):
+    debugs = {
+        'file' : debugFile,  # debugging in files, set log path first
+        'udp' : debugUDP,  # UDP debug, sending
+        'echo' : debugEcho,  # printing debug to server console
+        'ingame' : debugIngame
         }
-
-    # debug type specified, using filtered debug
-    if types != None:
-        # no debug types in C module, using hardcoded defaults
-        if len(C.debugLevel) == 0:
-            for type in types:
-                debugTypes[type](msg)
-        # debug type are in C module, using enabled only
-        elif len(C.debugLevel) != 0:
-            for type in types:
-                if type in C.debugLevel and type in debugTypes:
-                    debugTypes[type](msg)
-    # no debug type specified, using default from C module
-    elif types == None:
-        for debugType in debugTypes.keys():
-            if debugType in C.debugLevel:
-                debugTypes[debugType](msg)
+    if types == None:
+        for default_debug in C.DEBUGS_DEFAULT:
+            debugs[default_debug](msg)
     else:
-        # sending ingame sessage if debug enabled
-        debugEcho(msg)
-
+        for debug in types:
+            debugs[debug](msg)
 
 # ------------------------------------------------------------------------
 # debugPublic
@@ -132,6 +125,18 @@ def debugEcho(msg):
 
 
 # ------------------------------------------------------------------------
+# debugUDP
+# debug to UDP server
+# ------------------------------------------------------------------------  
+def debugUDP(msg):
+
+    try:
+        SOCK.sendto(msg, (C.CLIENTHOST, C.CLIENTPORT))
+    except:
+        debugEcho('debugUDP(): failed to send debug message')
+
+
+# ------------------------------------------------------------------------
 # debugFile
 # debug in file
 # ------------------------------------------------------------------------  
@@ -145,3 +150,14 @@ def debugFile(msg):
         logFile.close()
     except:
         pass
+
+# ------------------------------------------------------------------------
+# debugFile
+# debug in file
+# ------------------------------------------------------------------------ 
+def updateMessage(message):
+    position = message['position']
+    rotation = message['rotation']
+    wall_time_now = message['time_wall']
+    delta_time = message['time_delta']
+    debugMessage('%s' % ())
