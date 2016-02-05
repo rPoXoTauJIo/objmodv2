@@ -11,7 +11,11 @@
 # Credits:
 #   x
 # -------------------------------------------------------------------------
-
+global G_QUERY_MANAGER
+global G_SELECTED_QUERY
+global G_TRACKED_OBJECT
+global G_UPDATE_TIMER
+global G_UPDATE_LAST
 
 # importing python system modules
 import sys
@@ -50,7 +54,7 @@ class Query:
     def __init__(self, text):
         self.template = None
         self.settings = {}
-        self.setQuery(text)
+        self.querySet(text)
         D.debugEcho('Query::initiated query')
 
     def querySet(self, text):
@@ -98,7 +102,9 @@ class Query:
 class QueryManager:
 
     def __init__(self):
+        D.debugEcho('QueryManager::initializing')
         self.queries = {}
+        D.debugEcho('QueryManager::initialized!')
     
     def addQuery(self, message):
         D.debugEcho('QueryManager::creating new query')
@@ -123,7 +129,7 @@ class QueryManager:
         for query in self.queries:
             del self.queries[query]
 
-    def setupDefaultQueries():
+    def setupDefaultQueries(self):
         D.debugEcho('QueryManager::setting defaults')
         self.clearQueries()
 
@@ -131,7 +137,7 @@ class QueryManager:
         for vehicle in C.DEFAULT_QUERIES:
             D.debugEcho('QueryManager::parsing %s' % (vehicle))
             for queryParams in C.DEFAULT_QUERIES[vehicle]:
-                D.debugEcho('QueryManager:: %s' % (' '.join(queryParams)))
+                D.debugEcho('QueryManager::%s' % (' '.join(queryParams)))
                 self.addQuery(' '.join(queryParams))
 
 # ------------------------------------------------------------------------
@@ -173,7 +179,11 @@ def onGameStatusChanged(status):
 
         # creating query manager
         G_QUERY_MANAGER = QueryManager()
-        D.debugEcho('created manager')
+        if G_QUERY_MANAGER is not None:
+            D.debugEcho('created manager')
+            strmanager = str(G_QUERY_MANAGER)
+            D.debugEcho(strmanager)
+            D.debugEcho('^^manager^^')
         G_QUERY_MANAGER.setupDefaultQueries()
         D.debugEcho('installed default queries')
 
@@ -188,13 +198,11 @@ def resetUpdateTimer():
         G_UPDATE_TIMER.destroy()
         G_UPDATE_TIMER = None
         G_UPDATE_TIMER = bf2.Timer(onUpdate, 1, 1)
-        # 30+-5fps = ~0.33...ms is server frame, no need to speed up things a
-        # lot
+        # 30+-5fps = ~0.33...ms is server frame, no need for speed
         G_UPDATE_TIMER.setRecurring(0.01)
     else:
         G_UPDATE_TIMER = bf2.Timer(onUpdate, 1, 1)
-        # 30+-5fps = ~0.33...ms is server frame, no need to speed up things a
-        # lot
+        # 30+-5fps = ~0.33...ms is server frame, no need for speed
         G_UPDATE_TIMER.setRecurring(0.01)
 
 # offloading debug
