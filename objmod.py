@@ -51,8 +51,10 @@ class Query:
         self.template = None
         self.settings = {}
         self.setQuery(text)
+        D.debugEcho('Query::initiated query')
 
     def querySet(self, text):
+        D.debugEcho('Query::setting query parts from text:\n%s' % (text))
         query_parts = text.split(' ')
 
         try:
@@ -66,6 +68,9 @@ class Query:
                 3: 3
             }[len(args)]
             command = C.TEMPLATE_PROPERTIES[cmd_type][command_key]
+            
+            D.debugEcho('Query::command = %s' % (command))
+            D.debugEcho('Query::args = %s' % (str(args)))
         except:
             D.debugMessage(
                 'QueryParser::querySet(): failed to parse settings! original string:\n%s' % (text))
@@ -84,7 +89,9 @@ class Query:
                 self.template, command, args))
 
     def queryUpdate(self, queryObject):
+        D.debugEcho('Query::updating query')
         for setting in queryObject.settings:
+            D.debugEcho('Query::updating setting[%s]' % (setting))
             self.settings[setting] = queryObject.settings[setting]
 
 
@@ -94,25 +101,37 @@ class QueryManager:
         self.queries = {}
     
     def addQuery(self, message):
+        D.debugEcho('QueryManager::creating new query')
         queryObject = Query(message)
+        D.debugEcho('QueryManager::created query')
         self.updateQuery(queryObject)
+        D.debugEcho('QueryManager::updated query')
 
     def updateQuery(self, queryObject):
+        D.debugEcho('QueryManager::updating query')
         queryTemplate = queryObject.template
+        D.debugEcho('QueryManager::queryObject.template = %s' % (queryTemplate))
         if queryTemplate not in self.queries:
+            D.debugEcho('QueryManager::creating new query template')
             self.queries[queryTemplate] = queryObject
         else:
+            D.debugEcho('QueryManager::updating existing query template')
             self.queries[queryTemplate].queryUpdate(queryObject)
     
     def clearQueries(self):
+        D.debugEcho('QueryManager::clearing existing queries')
         for query in self.queries:
             del self.queries[query]
 
     def setupDefaultQueries():
+        D.debugEcho('QueryManager::setting defaults')
         self.clearQueries()
 
+        D.debugEcho('QueryManager::parsing defaults')
         for vehicle in C.DEFAULT_QUERIES:
+            D.debugEcho('QueryManager::parsing %s' % (vehicle))
             for queryParams in C.DEFAULT_QUERIES[vehicle]:
+                D.debugEcho('QueryManager:: %s' % (' '.join(queryParams)))
                 self.addQuery(' '.join(queryParams))
 
 # ------------------------------------------------------------------------
@@ -136,6 +155,7 @@ def deinit():
 # onGameStatusChanged
 # ------------------------------------------------------------------------
 def onGameStatusChanged(status):
+    global G_QUERY_MANAGER
 
     if status == bf2.GameStatus.Playing:
         # registering chatMessage handler
@@ -148,12 +168,15 @@ def onGameStatusChanged(status):
         # test stuff2
         host.registerHandler('EnterVehicle', onEnterVehicle)
         host.registerHandler('ExitVehicle', onExitVehicle)
+        
+        D.debugEcho('registered handlers')
 
         # creating query manager
         G_QUERY_MANAGER = QueryManager()
+        D.debugEcho('created manager')
         G_QUERY_MANAGER.setupDefaultQueries()
+        D.debugEcho('installed default queries')
 
-        setupDefaults()
         # resetUpdateTimer()
         D.debugMessage('===== FINISHED OBJMOD INIT =====')
 

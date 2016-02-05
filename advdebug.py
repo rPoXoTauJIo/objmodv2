@@ -44,9 +44,9 @@ def setStartTime():
 
     try:
         G_TIME_START = host.timer_getWallTime()
-        debug('setStartTime(): successfully set start time at ' + str(G_TIME_START), 'time')
+        debugEcho('setStartTime(): successfully set start time at ' + str(G_TIME_START))
     except:
-        debug('setStartTime(): failed to reset start time', 'time' )
+        debugEcho('setStartTime(): failed to reset start time')
 
 
 # ------------------------------------------------------------------------
