@@ -13,12 +13,28 @@ import bf2
 import host
 import time
 import os
+import cPickle
 import socket
+from datetime import datetime
 
 import constants as C
 
 G_TIME_START = 0
 SOCK = None
+FILENAME_DEBUG = 'debug_objmodv2.log'
+
+
+# ------------------------------------------------------------------------
+# UDP messages:
+#   1 : string,
+#   2 : position update,
+#
+#
+#
+#
+#
+#
+# ------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------
 # Init
@@ -34,6 +50,7 @@ def init():
         debugEcho('Failed to create socket')
 
     setStartTime()
+    setLogFilename()
 
 # ------------------------------------------------------------------------
 # setStartTime
@@ -48,6 +65,12 @@ def setStartTime():
     except:
         debugEcho('setStartTime(): failed to reset start time')
 
+def setLogFilename():
+    global FILENAME_DEBUG
+
+    debugEcho('setting filename')
+    FILENAME_DEBUG = 'objmodv2_%s_%s_%s.log' % (datetime.now().hour, datetime.now().minute, datetime.now().second)
+    debugEcho('filename set to %s' % (FILENAME_DEBUG))
 
 # ------------------------------------------------------------------------
 # sendMessageToAll
@@ -90,22 +113,47 @@ def time_string_now(length = 8):
         timestring +='0'
     return timestring
 
+def errorMessage():
+    type_, value_, traceback_ = sys.exc_info()
+    print 'Traceback:\n'
+    print 'Type:   %s' % (type_)
+    print 'Value:  %s' % (value_)
+    print 'EXCEPTION: %s' % (str(sys.exc_type))
+    print '\n...\n...\n...'
+    errType = str(sys.exc_type)
+    errPart1 = 'EXCEPTION: ' + errType[errType.find('.') + 1:]
+    errPart2 = str(sys.exc_value)
+
+    # \t is TAB
+    trace = '\n\tTrace:'
+    lastTrace = ''
+    while sys.exc_traceback is not None:
+        if sys.exc_traceback.tb_lineno == 0:
+            sys.exc_traceback = sys.exc_traceback.tb_next
+            continue
+        
+        lastTrace = str(sys.exc_traceback.tb_frame.f_code.co_filename) + ' on line ' + str(sys.exc_traceback.tb_lineno)
+        trace += '\n\t\t' + lastTrace
+        sys.exc_traceback = sys.exc_traceback.tb_next
+    
+    print errPart1 + '\n\t' + errPart2 + trace + '\n'
+
 # ------------------------------------------------------------------------
 # debug
 # simple func to create debug output
 # ------------------------------------------------------------------------  
-def debugMessage(msg, types = None):
+def debugMessage(msg, senders = None):
     debugs = {
         'file' : debugFile,  # debugging in files, set log path first
         'udp' : debugUDP,  # UDP debug, sending
         'echo' : debugEcho,  # printing debug to server console
         'ingame' : debugIngame
         }
-    if types == None:
+    if senders == None:
         for default_debug in C.DEBUGS_DEFAULT:
             debugs[default_debug](msg)
     else:
-        for debug in types:
+        for debug in senders:
             debugs[debug](msg)
 
 # ------------------------------------------------------------------------
@@ -128,10 +176,15 @@ def debugEcho(msg):
 # debugUDP
 # debug to UDP server
 # ------------------------------------------------------------------------  
-def debugUDP(msg):
+def debugUDP(msg, type=1):
 
     try:
-        SOCK.sendto(msg, (C.CLIENTHOST, C.CLIENTPORT))
+        data = {
+            'type' : type,
+            'msg' : msg
+            }
+        message = cPickle.dumps(data)
+        SOCK.sendto(message, (C.CLIENTHOST, C.CLIENTPORT))
     except:
         debugEcho('debugUDP(): failed to send debug message')
 
@@ -143,10 +196,9 @@ def debugUDP(msg):
 def debugFile(msg):
 
     try:
-        fileName = host.sgl_getModDirectory() + C.spawnerLogPath
-        logFile = open(fileName, 'a')
-        logTime = time_string_now()
-        logFile.write('t: ' + str(logTime) + ' ' + str(msg) + '\n')
+        #fileName = host.sgl_getModDirectory() + C.spawnerLogPath
+        logFile = open(host.sgl_getModDirectory() + '/python/game/objmodv2/' + FILENAME_DEBUG, 'a')
+        logFile.write(str(msg) + '\n')
         logFile.close()
     except:
         pass
@@ -155,9 +207,6 @@ def debugFile(msg):
 # debugFile
 # debug in file
 # ------------------------------------------------------------------------ 
-def updateMessage(message):
-    position = message['position']
-    rotation = message['rotation']
-    wall_time_now = message['time_wall']
-    delta_time = message['time_delta']
-    debugMessage('%s' % ())
+def updateMessageUDP(message):
+    #message = cPickle.dumps(message)
+    debugUDP(message,  2)
