@@ -7,9 +7,6 @@
 #   Provides various debug for wofspawner
 #
 # ------------------------------------------------------------------------
-'''
-global G_TIME_START  # global time, being set at start of round
-'''
 
 import bf2
 import host
@@ -17,9 +14,10 @@ import time
 import os
 import cPickle
 import socket
+import constants as C
 from datetime import datetime
 
-import constants as C
+global G_TIME_START  # global time, being set at start of round
 
 G_TIME_START = 0
 SOCK = None

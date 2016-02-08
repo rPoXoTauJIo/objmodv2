@@ -32,7 +32,7 @@ DEBUGS = [
 DEBUGS_DEFAULT = [
     #'file', # debugging in files, set log path first
     #'udp', # UDP debug, sending
-    #'echo',  # printing debug to server console
+    'echo',  # printing debug to server console
     #'ingame' # printing debug ingame
 ]
 

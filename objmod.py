@@ -11,13 +11,6 @@
 # Credits:
 #   x
 # -------------------------------------------------------------------------
-'''
-global G_QUERY_MANAGER
-global G_SELECTED_QUERY
-global G_TRACKED_OBJECT
-global G_UPDATE_TIMER
-global G_UPDATE_LAST
-'''
 
 # importing python system modules
 import sys
@@ -35,6 +28,12 @@ import game.realityspawner as realityspawner
 # importing custom modules
 import advdebug as D
 import constants as C
+
+global G_QUERY_MANAGER
+global G_SELECTED_QUERY
+global G_TRACKED_OBJECT
+global G_UPDATE_TIMER
+global G_UPDATE_LAST
 
 G_QUERY_MANAGER = None
 G_SELECTED_QUERY = None

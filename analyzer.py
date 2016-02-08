@@ -30,9 +30,9 @@ class MessageDebug:
         self.message = data['msg']
 
     def writeOutput(self, display=False):
-        debugFile(message)
+        debugFile(self.message)
         if display:
-            print(message)
+            print(self.message)
 
 
 class MessageUpdate:
