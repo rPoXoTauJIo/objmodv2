@@ -24,6 +24,7 @@ import host
 import game.realitycore as realitycore
 import game.realitydebug as realitydebug
 import game.realityspawner as realityspawner
+import game.realitytimer as realitytimer
 
 # importing custom modules
 import advdebug as D
@@ -150,6 +151,7 @@ class QueryManager:
 
 
 def init():
+    D.echoMessage('objmod loaded')
     host.registerGameStatusHandler(onGameStatusChanged)
 
 # ------------------------------------------------------------------------
@@ -171,9 +173,8 @@ def onGameStatusChanged(status):
         # registering chatMessage handler
         host.registerHandler('ChatMessage', onChatMessage, 1)
         D.init()
-
-        # test stuff
-        select_timer = bf2.Timer(setTestVehicle, 3, 1, 'ch_jet_su30_v2')
+        
+        realitytimer.Timer(setTestVehicle, 3, 1, 'us_jet_f15')
 
         # test stuff2
         host.registerHandler('EnterVehicle', onEnterVehicle)
@@ -185,8 +186,7 @@ def onGameStatusChanged(status):
         G_QUERY_MANAGER = QueryManager()
         if G_QUERY_MANAGER is not None:
             D.debugMessage('created manager')
-            strmanager = str(G_QUERY_MANAGER)
-            D.debugMessage(strmanager)
+            D.debugMessage(str(G_QUERY_MANAGER))
             D.debugMessage('^^manager^^')
         G_QUERY_MANAGER.setupDefaultQueries()
         D.debugMessage('installed default queries')
@@ -205,14 +205,14 @@ def resetUpdateTimer():
         G_UPDATE_TIMER.destroy()
         G_UPDATE_TIMER = None
         D.debugMessage('resetUpdateTimer(): creating new timer')
-        G_UPDATE_TIMER = bf2.Timer(onUpdate, 1, 1)
+        G_UPDATE_TIMER = realitytimer.Timer(onUpdate, 1, 1)
         D.debugMessage('resetUpdateTimer(): timer created!')
         # 30+-5fps = ~0.33...ms is server frame, no need for speed
         G_UPDATE_TIMER.setRecurring(0.01)
         D.debugMessage('resetUpdateTimer(): update time set')
     else:
         D.debugMessage('resetUpdateTimer(): creating new timer')
-        G_UPDATE_TIMER = bf2.Timer(onUpdate, 1, 1)
+        G_UPDATE_TIMER = realitytimer.Timer(onUpdate, 1, 1)
         D.debugMessage('resetUpdateTimer(): timer created!')
         # 30+-5fps = ~0.33...ms is server frame, no need for speed
         G_UPDATE_TIMER.setRecurring(0.01)
@@ -228,7 +228,7 @@ def onUpdate(data=''):
     wall_time_now = host.timer_getWallTime()
     delta_time = wall_time_now - G_UPDATE_LAST
     G_UPDATE_LAST = host.timer_getWallTime()
-    D.debugMessage('Time: %s+%s' % (wall_time_now, delta_time))
+    #D.debugMessage('Time: %s+%s' % (wall_time_now, delta_time))
     if G_TRACKED_OBJECT is not None:
         position = G_TRACKED_OBJECT.getPosition()
         rotation = G_TRACKED_OBJECT.getRotation()

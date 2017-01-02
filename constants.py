@@ -89,18 +89,18 @@ TEMPLATE_PROPERTIES = {
 
 DEFAULT_QUERIES = {
     # those are settings for modified stuff, use them as example
-    'ch_jet_su30': [
-        ['ch_jet_su30_v2_EngineL', 'maxspeed', '0.0 0.0 2000.0'],
-        ['ch_jet_su30_v2_EngineL', 'acc', '0.0 0.0 300.0'],
+    'us_jet_f15': [
+        ['us_jet_f15_WingVertical', 'winglift', '0.1'],
+        ['us_jet_f15_WingVertical', 'flaplift', '0.0'],
 
-        ['ch_jet_su30_v2_EngineR', 'maxspeed', '0.0 0.0 2000.0'],
-        ['ch_jet_su30_v2_EngineR', 'acc', '0.0 0.0 300.0'],
-    ],
-    'mec_jet_mig29': [
-        ['mec_jet_mig29_Engine_Left', 'maxspeed', '0.0 0.0 2000.0'],
-        ['mec_jet_mig29_Engine_Left', 'acc', '0.0 0.0 300.0'],
-
-        ['mec_jet_mig29_Engine_Right', 'maxspeed', '0.0 0.0 2000.0'],
-        ['mec_jet_mig29_Engine_Right', 'acc', '0.0 0.0 300.0'],
+        ['us_jet_f15_Rudder', 'winglift', '0.0'],
+        ['us_jet_f15_Rudder', 'flaplift', '0.2'],
+        
+        ['us_jet_f15_Winglet_Back', 'winglift', '1.0'],
+        ['us_jet_f15_Winglet_Back', 'flaplift', '1.0'],
+        
+        ['us_jet_f15_Camera', 'camera_flyby', '1'],
+        ['us_jet_f15_Camera', 'camera_chase', '1'],
+        
     ],
 }
