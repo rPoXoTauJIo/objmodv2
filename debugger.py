@@ -85,9 +85,13 @@ class Debugger(object):
             host.rcon_invoke(
                 'game.sayAll "_debug_ingame(): failed to send message"')
     
-    # nontested alias for objmodv2
+    # nontested aliase for backward compability with objmodv2
     def debugMessage(self, msg):
         self._debug_echo(msg)
+
+    # nontested aliase for backward compability with objmodv2
+    def updateMessageUDP(self, msg):
+        self._client.sendto(cPickle.dumps(msg), (self._default_addr, self._default_port))
 
     '''
     def debug_message(msg, senders=None):
