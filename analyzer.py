@@ -22,6 +22,7 @@ G_TIME_START = 0
 CURRENTCLIENT = None
 SOCK = None
 LOGFILENAME = None
+FRAMEBUFFER = None
 
 
 class MessageDebug:
@@ -46,34 +47,43 @@ class MessageUpdate:
         self.time_ping = time.time() - self.time_epoch
 
     def writeOutput(self, display=False):
-        debugFile(
-            'Delta: {3}\nPing: {5}\nPosition: {0}\nRotation: {1}\n'.format(
+        report_string = 'Walltime: {2}\nDelta: {3}\nPing: {5}\nPosition: {0}\nRotation: {1}\n'.format(
                 self.position,
                 self.rotation,
                 self.time_wall,
                 self.time_delta,
                 self.time_epoch,
-                self.time_ping))
+                self.time_ping)
+        debugFile(report_string)
         if display:
-            print(
-                'Delta: {3}\nPing: {5}\nPosition: {0}\nRotation: {1}\n'.format(
-                    self.position,
-                    self.rotation,
-                    self.time_wall,
-                    self.time_delta,
-                    self.time_epoch,
-                    self.time_ping))
+            print(report_string)
+
+
+class BufferUpdate:
+    
+    def __init__(self):
+        self.buffer = []
+    
+    def addFrame(self, update_object):
+        self.buffer.append(update_object)
 
 
 def processMessage(data):
-    global LOGBUFFER
 
     if data['type'] == 1:
         data_container = MessageDebug(data)
+        data_container.writeOutput(True)
     elif data['type'] == 2:
         data_container = MessageUpdate(data)
+        data_container.writeOutput()
+        FRAMEBUFFER.addFrame(update_object)
 
-    data_container.writeOutput(True)
+
+def bufferCreate():
+    global FRAMEBUFFER
+
+    FRAMEBUFFER = BufferUpdate()
+    
 
 # ------------------------------------------------------------------------
 # debugFile
@@ -119,7 +129,7 @@ def socketBind():
     print('Socket bind on {}:{} complete'.format(C.SERVERHOST, C.SERVERPORT))
 
 
-def socketReceive():
+def socketListen():
     global CURRENTCLIENT
 
     while True:
@@ -159,7 +169,7 @@ def setLogFilename():
     global LOGFILENAME
 
     print('setting filename')
-    LOGFILENAME = 'listener_%s_%s_%s.log' % (
+    LOGFILENAME = 'analyzer_%s_%s_%s.log' % (
         datetime.now().hour, datetime.now().minute, datetime.now().second)
     print('filename set to %s' % (LOGFILENAME))
 
@@ -173,10 +183,12 @@ def main():
 
     setStartTime()
     setLogFilename()
+    
+    bufferCreate()
 
     socketCreate()
     socketBind()
-    socketReceive()
+    socketListen()
     socketClose()
 
 

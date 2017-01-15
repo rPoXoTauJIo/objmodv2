@@ -21,129 +21,43 @@ import bf2
 import host
 
 # importing project reality packages
-import game.realitycore as realitycore
-import game.realitydebug as realitydebug
-import game.realityspawner as realityspawner
-import game.realitytimer as realitytimer
+import game.realitytimer as rtimer
+
 
 # importing custom modules
-import advdebug as D
+import debugger
 import constants as C
 
-global G_QUERY_MANAGER
-global G_SELECTED_QUERY
-global G_TRACKED_OBJECT
-global G_UPDATE_TIMER
-global G_UPDATE_LAST
-
 G_QUERY_MANAGER = None
-G_SELECTED_QUERY = None
 G_TRACKED_OBJECT = None
 G_UPDATE_TIMER = None
 G_UPDATE_LAST = 0.0
-
-
-####
-# TODO MAKE PROPER PARSER&SERIALISER
-####
-
-
-class Query:
-    """
-        representing single query object for template
-    """
-
-    def __init__(self, text):
-        self.template = None
-        self.settings = {}
-        self.querySet(text)
-        D.debugMessage('Query::initiated query')
-
-    def querySet(self, text):
-        D.debugMessage('Query::setting query parts from text:"%s"' % (text))
-        query_parts = text.split(' ')
-
-        try:
-            template = query_parts[0]
-            command_key = query_parts[1]
-            args = query_parts[2:]
-
-            # selecting command by measuring args lenght
-            cmd_type = {
-                1: 1,
-                3: 3
-            }[len(args)]
-            command = C.TEMPLATE_PROPERTIES[cmd_type][command_key]
-
-            D.debugMessage('Query::command = %s' % (command))
-            D.debugMessage('Query::args = %s' % (str(args)))
-        except:
-            D.debugMessage(
-                'QueryParser::querySet(): failed2parse! original string:\n%s' %
-                (text))
-
-        self.settings[command] = args
-
-    def queryRun(self):
-        for command in self.settings.keys():
-            args = self.settings[command]
-            args = '/'.join(args)
-            host.rcon_invoke("""
-                ObjectTemplate.active %s
-                ObjectTemplate.%s %s
-                """ % (self.template, attribute, args))
-            D.debugMessage('ObjectTemplate.active %s\nObjectTemplate.%s %s' % (
-                self.template, command, args))
-
-    def queryUpdate(self, queryObject):
-        D.debugMessage('Query::updating query')
-        for setting in queryObject.settings:
-            D.debugMessage('Query::updating setting[%s]' % (setting))
-            self.settings[setting] = queryObject.settings[setting]
-
+# debugger
+D = debugger.Debugger()
 
 class QueryManager:
 
     def __init__(self):
         D.debugMessage('QueryManager::initializing')
-        self.queries = {}
+        
+        self.queries = []
+        
         D.debugMessage('QueryManager::initialized!')
-
-    def addQuery(self, message):
-        D.debugMessage('QueryManager::creating new query')
-        queryObject = Query(message)
-        D.debugMessage('QueryManager::created query')
-        self.updateQuery(queryObject)
-        D.debugMessage('QueryManager::updated query')
-
-    def updateQuery(self, queryObject):
-        D.debugMessage('QueryManager::updating query')
-        queryTemplate = queryObject.template
-        D.debugMessage(
-            'QueryManager::queryObject.template = %s' %
-            (queryTemplate))
-        if queryTemplate not in self.queries:
-            D.debugMessage('QueryManager::creating new query template')
-            self.queries[queryTemplate] = queryObject
-        else:
-            D.debugMessage('QueryManager::updating existing query template')
-            self.queries[queryTemplate].queryUpdate(queryObject)
-
-    def clearQueries(self):
-        D.debugMessage('QueryManager::clearing existing queries')
-        for query in self.queries:
-            del self.queries[query]
+    
 
     def setupDefaultQueries(self):
-        D.debugMessage('QueryManager::setting defaults')
-        self.clearQueries()
+        del self.queries
+        self.queries = []
 
-        D.debugMessage('QueryManager::parsing defaults')
         for vehicle in C.DEFAULT_QUERIES:
             D.debugMessage('QueryManager::parsing %s' % (vehicle))
-            for queryParams in C.DEFAULT_QUERIES[vehicle]:
-                D.debugMessage('QueryManager::%s' % (' '.join(queryParams)))
-                self.addQuery(' '.join(queryParams))
+            for vehicle_part in C.DEFAULT_QUERIES[vehicle]:
+                invoke_string = ('ObjectTemplate.active %s' % (str(vehicle_part)))
+                host.rcon_invoke(invoke_string)
+                D.debugMessage(invoke_string)
+                for param in C.DEFAULT_QUERIES[vehicle][vehicle_part]:
+                    host.rcon_invoke(param)
+                    D.debugMessage(param)
 
 # ------------------------------------------------------------------------
 # Init
@@ -151,7 +65,11 @@ class QueryManager:
 
 
 def init():
-    D.echoMessage('objmod loaded')
+    global G_QUERY_MANAGER
+
+    G_QUERY_MANAGER = QueryManager()
+    G_QUERY_MANAGER.setupDefaultQueries()
+
     host.registerGameStatusHandler(onGameStatusChanged)
 
 # ------------------------------------------------------------------------
@@ -167,79 +85,64 @@ def deinit():
 # onGameStatusChanged
 # ------------------------------------------------------------------------
 def onGameStatusChanged(status):
-    global G_QUERY_MANAGER
 
     if status == bf2.GameStatus.Playing:
         # registering chatMessage handler
         host.registerHandler('ChatMessage', onChatMessage, 1)
-        D.init()
-        
-        realitytimer.Timer(setTestVehicle, 3, 1, 'us_jet_f15')
+
+        # test stuff
+        #select_timer = rtimer.Timer(setTestVehicle, 3, 1, 'us_jet_a10a')
 
         # test stuff2
         host.registerHandler('EnterVehicle', onEnterVehicle)
         host.registerHandler('ExitVehicle', onExitVehicle)
-
-        D.debugMessage('registered handlers')
-
-        # creating query manager
-        G_QUERY_MANAGER = QueryManager()
+        
         if G_QUERY_MANAGER is not None:
-            D.debugMessage('created manager')
-            D.debugMessage(str(G_QUERY_MANAGER))
-            D.debugMessage('^^manager^^')
-        G_QUERY_MANAGER.setupDefaultQueries()
-        D.debugMessage('installed default queries')
+            G_QUERY_MANAGER.setupDefaultQueries()
 
         resetUpdateTimer()
+
         D.debugMessage('===== FINISHED OBJMOD INIT =====')
 
 
+# 30+-5fps = ~0.33...ms is server frame, no need for updates more frequently than 0.05
 def resetUpdateTimer():
     global G_UPDATE_TIMER
 
-    D.debugMessage('resetUpdateTimer(): resetting update timer')
 
     if G_UPDATE_TIMER is not None:
-        D.debugMessage('resetUpdateTimer(): destroying existing timer')
         G_UPDATE_TIMER.destroy()
         G_UPDATE_TIMER = None
-        D.debugMessage('resetUpdateTimer(): creating new timer')
-        G_UPDATE_TIMER = realitytimer.Timer(onUpdate, 1, 1)
-        D.debugMessage('resetUpdateTimer(): timer created!')
-        # 30+-5fps = ~0.33...ms is server frame, no need for speed
-        G_UPDATE_TIMER.setRecurring(0.01)
-        D.debugMessage('resetUpdateTimer(): update time set')
+
+        G_UPDATE_TIMER = rtimer.Timer(onUpdate, 1, 1)
+        G_UPDATE_TIMER.setRecurring(0.05)
     else:
-        D.debugMessage('resetUpdateTimer(): creating new timer')
-        G_UPDATE_TIMER = realitytimer.Timer(onUpdate, 1, 1)
-        D.debugMessage('resetUpdateTimer(): timer created!')
-        # 30+-5fps = ~0.33...ms is server frame, no need for speed
-        G_UPDATE_TIMER.setRecurring(0.01)
-        D.debugMessage('resetUpdateTimer(): update time set')
+        G_UPDATE_TIMER = rtimer.Timer(onUpdate, 1, 1)
+        G_UPDATE_TIMER.setRecurring(0.05)
+    
+    D.debugMessage('resetUpdateTimer(): reloaded updated timer')
 
 # offloading debug
 # tnx pie&mats for idea, althorugh my implementation is worse
-
-
 def onUpdate(data=''):
     global G_UPDATE_LAST
 
-    wall_time_now = host.timer_getWallTime()
-    delta_time = wall_time_now - G_UPDATE_LAST
+    time_wall_now = host.timer_getWallTime()
+    time_delta = time_wall_now - G_UPDATE_LAST
+    time_epoch = time.time()
     G_UPDATE_LAST = host.timer_getWallTime()
-    #D.debugMessage('Time: %s+%s' % (wall_time_now, delta_time))
+    #D.debugMessage('Time: %s+%s@%s' % (time_wall_now, time_delta, time_epoch))
     if G_TRACKED_OBJECT is not None:
         position = G_TRACKED_OBJECT.getPosition()
         rotation = G_TRACKED_OBJECT.getRotation()
         message = {
             'position': position,
             'rotation': rotation,
-            'time_wall': wall_time_now,
-            'time_delta': delta_time,
-            'time_epoch': time.time()
+            'time_wall': time_wall_now,
+            'time_delta': time_delta,
+            'time_epoch': time_epoch
         }
-        D.debugMessage('Position: %s\nRotation: %s\n' % (position, rotation))
+        #D.debugMessage('Position: %s\nRotation: %s\n' % (position, rotation))
         D.updateMessageUDP(message)
 
 
@@ -267,7 +170,7 @@ def setTestVehicle(template, data=''):
         'setTestVehicle(): found %s objects of template %s' %
         (len(objects), template))
     G_TRACKED_OBJECT = objects[0]
-    D.debugMessage('Selected object of template %s at %s' % (
+    D.debugMessage('Selected first object of template %s at %s' % (
         G_TRACKED_OBJECT.templateName, str(G_TRACKED_OBJECT.getPosition())))
 
 
@@ -305,15 +208,13 @@ def onChatMessage(playerId, text, channel, flags):
     args = text.split(' ')
 
     if args[0] == C.COMMANDKEY:
-        # COMMANDKEY is allowed to use if debug enabled
-        if realitydebug.PRDEBUG is not None:
-            del args[0]
-            if len(args) == 0:
-                D.debugMessage('NO ARGS IN CHAT MSG', ['echo'])
-                return
-            commandHandler(player, args)
-        else:
-            pass
+        del args[0]
+        if len(args) == 0:
+            D.debugMessage('NO ARGS IN CHAT MSG', ['echo'])
+            return
+        commandHandler(player, args)
+    else:
+        pass
 
 
 # ------------------------------------------------------------------------
@@ -330,7 +231,7 @@ def commandHandler(player, args):
         reload(C)  # reloading constant file
         return G_QUERY_MANAGER.setupDefaultQueries()
 
-    if args[0] == 'upload':
+    if args[0] == 'reset':
         return resetUpdateTimer()
 
     # createQuery(args)
