@@ -91,7 +91,8 @@ class Debugger(object):
 
     # nontested aliase for backward compability with objmodv2
     def updateMessageUDP(self, msg):
-        self._client.sendto(cPickle.dumps(msg), (self._default_addr, self._default_port))
+        if self._client != None:  # safety check
+            self._client.sendto(cPickle.dumps(msg), (self._default_addr, self._default_port))
 
     '''
     def debug_message(msg, senders=None):
