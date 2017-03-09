@@ -67,16 +67,16 @@ DEFAULT_QUERIES = {
         },
     'ru_jet_su27' : {
         'ru_jet_su27_Wing_Front' : [
-            'ObjectTemplate.setWingLift 0.5',
+            'ObjectTemplate.setWingLift 0.7',
             'ObjectTemplate.setFlapLift 0.0',
             ],
         'ru_jet_su27_Winglet' : [
-            'ObjectTemplate.setMinRotation 0/-15/0',
-            'ObjectTemplate.setMaxRotation 0/20/0',
-            'ObjectTemplate.setMaxSpeed 0/1000/0',
+            'ObjectTemplate.setMinRotation 0/-5/0',
+            'ObjectTemplate.setMaxRotation 0/10/0',
+            'ObjectTemplate.setMaxSpeed 0/300/0',
             'ObjectTemplate.setAcceleration 0/-150/0',
-            'ObjectTemplate.setWingLift 0.5',
-            'ObjectTemplate.setFlapLift 0.15',
+            'ObjectTemplate.setWingLift 0.6',
+            'ObjectTemplate.setFlapLift 0.35',
             ],
         'ru_jet_su27_Flaps_L' : [
             'ObjectTemplate.setMinRotation 0/-5/0',
@@ -89,6 +89,37 @@ DEFAULT_QUERIES = {
             'ObjectTemplate.setMaxRotation 0/10/0',
             #'ObjectTemplate.setMaxSpeed 0/300/0',
             #'ObjectTemplate.setAcceleration 0/-150/0',
+            ],
+        'ru_jet_su27_EngineMain' : [
+            'ObjectTemplate.setMaxRotation 0/0/5000',
+            'ObjectTemplate.setMaxSpeed 0/0/500',
+            'ObjectTemplate.setAcceleration 0/0/100',
+            #'ObjectTemplate.setMaxSpeed 0/300/0',
+            #'ObjectTemplate.setAcceleration 0/-150/0',
+            ],
+        },
+    'us_the_mv22' : {
+        'us_the_mv22_Wing_Front' : [
+            'ObjectTemplate.setPositionOffset 0/0/10',
+            'ObjectTemplate.setWingLift 0.8',
+            'ObjectTemplate.setFlapLift 0.0',
+            ],
+        'us_the_mv22_Winglet' : [
+            'ObjectTemplate.setAcceleration 0/-150/0',
+            'ObjectTemplate.setWingLift 0.8',
+            'ObjectTemplate.setFlapLift 0.45',
+            ],
+        'us_the_mv22_LFrontFlaps01' : [
+            'ObjectTemplate.setWingLift 0.35',
+            'ObjectTemplate.setFlapLift 0.15',
+            ],
+        'us_the_mv22_RFrontFlaps01' : [
+            'ObjectTemplate.setWingLift 0.35',
+            'ObjectTemplate.setFlapLift 0.15',
+            ],
+        'us_the_mv22_RudderYaw' : [
+            'ObjectTemplate.setWingLift 0.6',
+            'ObjectTemplate.setFlapLift 0.1',
             ],
         }
     }
