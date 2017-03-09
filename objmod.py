@@ -132,7 +132,7 @@ def onUpdate(data=''):
     time_epoch = time.time()
     G_UPDATE_LAST = host.timer_getWallTime()
     #D.debugMessage('Time: %s+%s@%s' % (time_wall_now, time_delta, time_epoch))
-    if G_TRACKED_OBJECT is not None:
+    if G_TRACKED_OBJECT is not None and G_TRACKED_OBJECT.isValid():
         position = G_TRACKED_OBJECT.getPosition()
         rotation = G_TRACKED_OBJECT.getRotation()
         message = {

@@ -119,6 +119,34 @@ DEFAULT_QUERIES = {
             ],
         'us_the_mv22_RudderYaw' : [
             'ObjectTemplate.setWingLift 0.6',
+        },
+    'us_jet_f15' : {
+        'us_jet_f15_Wing_Front' : [
+            'ObjectTemplate.setWingLift 0.4',
+            'ObjectTemplate.setFlapLift 0.0',
+            ],
+        'us_jet_f15_Winglet_Back' : [
+            'ObjectTemplate.setMinRotation 0/-15/0',
+            'ObjectTemplate.setMaxRotation 0/20/0',
+            'ObjectTemplate.setMaxSpeed 0/1000/0',
+            'ObjectTemplate.setAcceleration 0/-150/0',
+            'ObjectTemplate.setWingLift 0.4',
+            'ObjectTemplate.setFlapLift 0.15',
+            ],
+        'us_jet_f15_Flaps_L' : [
+            'ObjectTemplate.setMinRotation 0/-5/0',
+            'ObjectTemplate.setMaxRotation 0/10/0',
+            'ObjectTemplate.setMaxSpeed 0/300/0',
+            'ObjectTemplate.setAcceleration 0/-150/0',
+            'ObjectTemplate.setWingLift 0.1',
+            'ObjectTemplate.setFlapLift 0.1',
+            ],
+        'us_jet_f15_Flaps_R' : [
+            'ObjectTemplate.setMinRotation 0/-5/0',
+            'ObjectTemplate.setMaxRotation 0/10/0',
+            'ObjectTemplate.setMaxSpeed 0/300/0',
+            'ObjectTemplate.setAcceleration 0/150/0',
+            'ObjectTemplate.setWingLift 0.1',
             'ObjectTemplate.setFlapLift 0.1',
             ],
         }
