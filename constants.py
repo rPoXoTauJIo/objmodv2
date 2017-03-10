@@ -119,6 +119,7 @@ DEFAULT_QUERIES = {
             ],
         'us_the_mv22_RudderYaw' : [
             'ObjectTemplate.setWingLift 0.6',
+            ],
         },
     'us_jet_f15' : {
         'us_jet_f15_Wing_Front' : [
