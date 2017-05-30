@@ -37,12 +37,12 @@ C['PICKLE_DATA'] = False
 #
 # Use file logger
 # Default is False
-C['FILELOG'] = False
+C['FILELOG'] = True
 #
 #
 # Filename of the admin log file
 # Default is "rr_mapscript.txt"
-C['PATH_LOG_FILENAME'] = "objmodv2.txt"
+C['PATH_LOG_FILENAME'] = "objmodv2.log"
 #
 #
 # Path relative to PR root (not mod root) of mapscript log file

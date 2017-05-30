@@ -1,63 +1,47 @@
 # --------------------------------------------------------------------------
-# Project Reality x by rpoxo
-# x
-#
-# ~ objmodv2.py
+# objmod by rpoxo
 #
 # Description:
 #
-# x
+# module for changing various object templates properties on flight
 #
 # Credits:
-#   x
+#   alon&mats&pr sources for various code help
 # -------------------------------------------------------------------------
 
 # importing python system modules
 import sys
 import time
+import math
 
 # importing modules from standart bf2 package
 import bf2
 import host
 
-# importing project reality packages
-import game.realitytimer as rtimer
-
-
 # importing custom modules
-import debugger
 import constants as C
 
-G_QUERY_MANAGER = None
-G_TRACKED_OBJECT = None
-G_UPDATE_TIMER = None
-G_UPDATE_LAST = 0.0
-# debugger
-D = debugger.Debugger()
+G_TWEAKER = None
 
-class QueryManager:
+class Tweaker:
 
     def __init__(self):
-        D.debugMessage('QueryManager::initializing')
-        
-        self.queries = []
-        
-        D.debugMessage('QueryManager::initialized!')
-    
+        self.__queries = []
 
-    def setupDefaultQueries(self):
-        del self.queries
-        self.queries = []
+    def setupDefaultTweaks(self):
+        del self.__queries
+        self.__queries = []
 
-        for vehicle in C.DEFAULT_QUERIES:
-            D.debugMessage('QueryManager::parsing %s' % (vehicle))
-            for vehicle_part in C.DEFAULT_QUERIES[vehicle]:
+        for vehicle in C.TWEAKS:
+            debugMessage('Tweaker::parsing %s' % (vehicle))
+            for vehicle_part in C.TWEAKS[vehicle]:
                 invoke_string = ('ObjectTemplate.active %s' % (str(vehicle_part)))
                 host.rcon_invoke(invoke_string)
-                D.debugMessage(invoke_string)
-                for param in C.DEFAULT_QUERIES[vehicle][vehicle_part]:
+                debugMessage(invoke_string)
+                for param in C.TWEAKS[vehicle][vehicle_part]:
                     host.rcon_invoke(param)
-                    D.debugMessage(param)
+                    debugMessage(param)
+    
 
 # ------------------------------------------------------------------------
 # Init
@@ -65,10 +49,10 @@ class QueryManager:
 
 
 def init():
-    global G_QUERY_MANAGER
+    global G_TWEAKER
 
-    G_QUERY_MANAGER = QueryManager()
-    G_QUERY_MANAGER.setupDefaultQueries()
+    G_TWEAKER = Tweaker()
+    G_TWEAKER.setupDefaultTweaks()
 
     host.registerGameStatusHandler(onGameStatusChanged)
 
@@ -89,89 +73,11 @@ def onGameStatusChanged(status):
     if status == bf2.GameStatus.Playing:
         # registering chatMessage handler
         host.registerHandler('ChatMessage', onChatMessage, 1)
-
-        # test stuff
-        #select_timer = rtimer.Timer(setTestVehicle, 3, 1, 'us_jet_a10a')
-
-        # test stuff2
-        host.registerHandler('EnterVehicle', onEnterVehicle)
-        host.registerHandler('ExitVehicle', onExitVehicle)
         
-        if G_QUERY_MANAGER is not None:
-            G_QUERY_MANAGER.setupDefaultQueries()
-
-        resetUpdateTimer()
+        if G_TWEAKER is not None:
+            G_TWEAKER.setupDefaultTweaks()
 
         D.debugMessage('===== FINISHED OBJMOD INIT =====')
-
-
-# 30+-5fps = ~0.33...ms is server frame, no need for updates more frequently than 0.05
-def resetUpdateTimer():
-    global G_UPDATE_TIMER
-
-
-    if G_UPDATE_TIMER is not None:
-        G_UPDATE_TIMER.destroy()
-        G_UPDATE_TIMER = None
-
-        G_UPDATE_TIMER = rtimer.Timer(onUpdate, 1, 1)
-        G_UPDATE_TIMER.setRecurring(0.05)
-    else:
-        G_UPDATE_TIMER = rtimer.Timer(onUpdate, 1, 1)
-        G_UPDATE_TIMER.setRecurring(0.05)
-    
-    D.debugMessage('resetUpdateTimer(): reloaded updated timer')
-
-# offloading debug
-# tnx pie&mats for idea, althorugh my implementation is worse
-def onUpdate(data=''):
-    global G_UPDATE_LAST
-
-    time_wall_now = host.timer_getWallTime()
-    time_delta = time_wall_now - G_UPDATE_LAST
-    time_epoch = time.time()
-    G_UPDATE_LAST = host.timer_getWallTime()
-    #D.debugMessage('Time: %s+%s@%s' % (time_wall_now, time_delta, time_epoch))
-    if G_TRACKED_OBJECT is not None and G_TRACKED_OBJECT.isValid():
-        position = G_TRACKED_OBJECT.getPosition()
-        rotation = G_TRACKED_OBJECT.getRotation()
-        message = {
-            'position': position,
-            'rotation': rotation,
-            'time_wall': time_wall_now,
-            'time_delta': time_delta,
-            'time_epoch': time_epoch
-        }
-        #D.debugMessage('Position: %s\nRotation: %s\n' % (position, rotation))
-        D.updateMessageUDP(message)
-
-
-def onEnterVehicle(player, vehicle, freeSoldier=False):
-    global G_TRACKED_OBJECT
-
-    G_TRACKED_OBJECT = vehicle
-    D.debugMessage('Player entered %s' % (G_TRACKED_OBJECT.templateName))
-    resetUpdateTimer()
-
-
-def onExitVehicle(player, vehicle):
-    global G_TRACKED_OBJECT
-
-    G_TRACKED_OBJECT = None
-    D.debugMessage('Player left %s' % (vehicle.templateName))
-    resetUpdateTimer()
-
-
-def setTestVehicle(template, data=''):
-    global G_TRACKED_OBJECT
-
-    objects = bf2.objectManager.getObjectsOfTemplate(template)
-    D.debugMessage(
-        'setTestVehicle(): found %s objects of template %s' %
-        (len(objects), template))
-    G_TRACKED_OBJECT = objects[0]
-    D.debugMessage('Selected first object of template %s at %s' % (
-        G_TRACKED_OBJECT.templateName, str(G_TRACKED_OBJECT.getPosition())))
 
 
 # ------------------------------------------------------------------------
@@ -179,7 +85,7 @@ def setTestVehicle(template, data=''):
 # Callback that managing chat messages.
 ##########################################################################
 # !NEVER call any messages directly from onChatMessage handler
-# It causing inifite loop
+# It causing inifite loop and game hangs
 ##########################################################################
 # ------------------------------------------------------------------------
 def onChatMessage(playerId, text, channel, flags):
@@ -227,15 +133,18 @@ def commandHandler(player, args):
             handling functions calls for ingame debug
     """
 
-    if args[0] == 'reload':
+    if args[0] == C.KEYWORD_RELOAD:
         reload(C)  # reloading constant file
-        return G_QUERY_MANAGER.setupDefaultQueries()
-
-    if args[0] == 'reset':
-        return resetUpdateTimer()
-
-    # createQuery(args)
-    D.debugMessage('commandHandler::args = %s' % (str(args)))
+        return G_TWEAKER.setupDefaultTweaks()
 
 
-# EOF
+# Debug
+def debugMessage(msg):
+    host.rcon_invoke('echo "%s"' % (str(msg)))
+
+def debugIngame(msg):
+    #debugMessage(msg)
+    try:
+        host.rcon_invoke('game.sayAll "%s"' % (str(msg)))
+    except:
+        host.rcon_invoke('echo "debugIngame(FAIL): %s"' % (str(msg)))
