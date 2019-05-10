@@ -77,7 +77,7 @@ def onGameStatusChanged(status):
         if G_TWEAKER is not None:
             G_TWEAKER.setupDefaultTweaks()
 
-        D.debugMessage('===== FINISHED OBJMOD INIT =====')
+        debugMessage('===== FINISHED OBJMOD INIT =====')
 
 
 # ------------------------------------------------------------------------
@@ -116,7 +116,7 @@ def onChatMessage(playerId, text, channel, flags):
     if args[0] == C.COMMANDKEY:
         del args[0]
         if len(args) == 0:
-            D.debugMessage('NO ARGS IN CHAT MSG', ['echo'])
+            debugMessage('NO ARGS IN CHAT MSG')
             return
         commandHandler(player, args)
     else:
