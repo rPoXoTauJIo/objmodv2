@@ -31,16 +31,14 @@ class Tweaker:
     def setupDefaultTweaks(self):
         del self.__queries
         self.__queries = []
-
-        for vehicle in C.TWEAKS:
-            debugMessage('Tweaker::parsing %s' % (vehicle))
-            for vehicle_part in C.TWEAKS[vehicle]:
-                invoke_string = ('ObjectTemplate.active %s' % (str(vehicle_part)))
-                host.rcon_invoke(invoke_string)
-                debugMessage(invoke_string)
-                for param in C.TWEAKS[vehicle][vehicle_part]:
-                    host.rcon_invoke(param)
-                    debugMessage(param)
+        
+        for objectTemplate in C.TWEAKS:
+            activeSafe = ('ObjectTemplate.active %s' % (str(objectTemplate)))
+            host.rcon_invoke(activeSafe)
+            debugMessage(activeSafe)
+            for tweak in C.TWEAKS[objectTemplate]:
+                host.rcon_invoke(tweak)
+                debugMessage(tweak)
     
 
 # ------------------------------------------------------------------------
